@@ -4,7 +4,7 @@ config-version: 2
 require-dbt-version: [">=1.3.0", "<2.0.0"]
 models:
   facebook_ads:
-    +schema: facebookads_summary_prod
+    +schema: facebook_ads_summary_prod
     +materialized: table
     intermediate:
       +materialized: view

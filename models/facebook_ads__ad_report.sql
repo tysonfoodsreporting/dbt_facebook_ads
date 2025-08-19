@@ -1,4 +1,11 @@
-{{ config(enabled=var('ad_reporting__facebook_ads_enabled', True)) }}
+{{ config(enabled=var('ad_reporting__facebook_ads_enabled', True),
+    unique_key = ['source_relation','date_day','account_id','campaign_id','ad_set_id','ad_id'],
+    partition_by={
+      "field": "date_day", 
+      "data_type": "date",
+      "granularity": "day"
+    }
+    ) }}
 
 with report as (
 
@@ -90,5 +97,24 @@ joined as (
     {{ dbt_utils.group_by(11) }}
 )
 
-select *
-from joined
+-- addition for conversion data
+select 
+	ads.source_relation,
+	ads.date_day,
+	ads.account_id,
+	ads.account_name,
+	ads.campaign_id,
+	ads.campaign_name,
+	ads.ad_set_id,
+	ads.ad_set_name,
+	ads.ad_id,
+	ads.ad_name,
+        ads.clicks,
+       	ads.impressions,
+       	ads.spend,
+        SUM(conversion.value) as conversions
+
+         FROM joined ads
+         LEFT JOIN  {{ ref('stg_facebook_ads__conversion_data_conversions') }} conversion
+        ON ads.ad_id= CAST(conversion.ad_id As INT) and ads.date_day=conversion.date
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
